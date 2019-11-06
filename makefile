@@ -1,11 +1,11 @@
 CC = gcc
 
 LIBS = -lX11
-FLAGS = -Wall -Wextra
+FLAGS = -Wall 
 
 TARGETS = vwm
 
-SOURCES = vwm.c xevents.c
+SOURCES = $(wildcard *.c)
 OBJECTS = $(SOURCES:.c=.o)
 
 

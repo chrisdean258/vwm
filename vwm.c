@@ -1,11 +1,12 @@
-#include <X11/keysym.h>
 #include <X11/Xlib.h>
 #include "macros.h"
-#include "xevents.h"
+#include "xeventhandler.h"
 #include "vwm.h"
 
 int running = 1;
-static void (*handler[])(Display *, XEvent *) = {
+Display * display;
+
+static xeventhandler handler[] = {
 	[ButtonPress] = buttonpress,
 	[ClientMessage] = clientmessage,
 	[ConfigureRequest] = configurerequest,
@@ -22,20 +23,19 @@ static void (*handler[])(Display *, XEvent *) = {
 
 int main()
 {
-	Display * dpy;
 	Window root;
 	XEvent ev;
 
-	if(!(dpy = XOpenDisplay(0x0))) return 1;
+	if(!(display = XOpenDisplay(NULL))) return 1;
 
-	root = DefaultRootWindow(dpy);
+	root = DefaultRootWindow(display);
 
-	XGrabKeyboard(dpy, root, True, GrabModeAsync, GrabModeAsync, CurrentTime);
+	XGrabKeyboard(display, root, True, GrabModeAsync, GrabModeAsync, CurrentTime);
 
 	while(running)
 	{
-		XNextEvent(dpy, &ev);
-		if(handler[ev.type]) handler[ev.type](dpy, &ev);
+		XNextEvent(display, &ev);
+		if(handler[ev.type]) handler[ev.type](&ev);
 	}
 
 	return 0;
