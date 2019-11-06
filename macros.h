@@ -4,7 +4,9 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define CONSTRAIN(x, a, b) MAX(MIN((x), (b)), (a))
 
-#define LOG(str) (fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, str))
-#define ELOG(str) (fprintf(stderr, "%s:%d:", __FILE__, __LINE__), perror(str))
-#define LOGF(...) (fprintf(stderr, "%s:%d: ", __FILE__, __LINE__), fprintf(stderr, __VA_ARGS__), fprintf(stderr, "\n"))
+#define _INTERNAL_LOG() (fprintf(stderr, "%s:%s:%d ", __FILE__, __FUNCTION__, __LINE__))
+#define ELOG(str) (_INTERNAL_LOG(), perror(str))
+#define LOGF(...) (_INTERNAL_LOG(), fprintf(stderr, __VA_ARGS__), fprintf(stderr, "\n"))
+#define LOG(str) (LOGF("%s", (str)))
+#define HERE() (LOG("Point Reached"))
 

@@ -17,5 +17,7 @@ vwm: $(OBJECTS)
 %.o: %.c
 	$(CC) -o $@ -c $^ $(FLAGS) $(LIBS)
 
-
+.PHONY: clean
+clean:
+	rm -f *.o
 	

@@ -19,4 +19,5 @@ void propertynotify  (XEvent * e);
 void unmapnotify     (XEvent * e);
 
 extern Display * display;
+extern Window root;
 #endif

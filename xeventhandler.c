@@ -4,27 +4,34 @@
 #include "vwm.h"
 #include "xeventhandler.h"
 
-void buttonpress     (XEvent * e){LOG("buttonpress");}
-void clientmessage   (XEvent * e){LOG("clientmessage");}
-void configurerequest(XEvent * e){LOG("configurerequest");}
-void configurenotify (XEvent * e){LOG("configurenotify");}
-void destroynotify   (XEvent * e){LOG("destroynotify");}
-void expose          (XEvent * e){LOG("expose");}
-void focusin         (XEvent * e){LOG("focusin");}
+void buttonpress     (XEvent * e){HERE();}
+void clientmessage   (XEvent * e){HERE();}
+void configurerequest(XEvent * e){HERE();}
+void configurenotify (XEvent * e){HERE();}
+void destroynotify   (XEvent * e){HERE();}
+void expose          (XEvent * e){HERE();}
+void focusin         (XEvent * e){HERE();}
+
 void keypress(XEvent * e)
 {
 	KeySym keysym;
 	XKeyEvent * ev;
-
-	LOG("keypress");
+	char * c;
 
 	ev = &e->xkey;
 	keysym = XkbKeycodeToKeysym(display, ev->keycode, 0, ev->state & ShiftMask ? 1 : 0);
 
 	if(keysym == XK_q) running = 0;
+	if(keysym == XK_Escape) NormalMode();
+	if(keysym == XK_i) InsertMode();
+	if(keysym == XK_colon) CommandMode();
+
+	c = XKeysymToString(keysym);
+	LOG(c);
 }
-void mappingnotify   (XEvent * e){LOG("mappingnotify");}
-void maprequest      (XEvent * e){LOG("maprequest");}
-void propertynotify  (XEvent * e){LOG("propertynotify");}
-void unmapnotify     (XEvent * e){LOG("unmapnotify");}
+
+void mappingnotify   (XEvent * e){HERE();}
+void maprequest      (XEvent * e){HERE();}
+void propertynotify  (XEvent * e){HERE();}
+void unmapnotify     (XEvent * e){HERE();}
 
