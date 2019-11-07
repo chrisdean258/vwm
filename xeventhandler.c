@@ -20,14 +20,12 @@ void keypress(XEvent * e)
 
 	ev = &e->xkey;
 	keysym = XkbKeycodeToKeysym(display, ev->keycode, 0, ev->state & ShiftMask ? 1 : 0);
+	c = XKeysymToString(keysym);
+	LOG(c);
 
-	if(keysym == XK_q) running = 0;
 	if(keysym == XK_Escape) NormalMode();
 	if(keysym == XK_i) InsertMode();
 	if(keysym == XK_colon) CommandMode();
-
-	c = XKeysymToString(keysym);
-	LOG(c);
 }
 
 void mappingnotify   (XEvent * e){HERE();}

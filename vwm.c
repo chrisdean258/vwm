@@ -36,6 +36,7 @@ char * GetInputString()
 	buff[0] = '\0';
 	char * c;
 
+	printf(":");
 	fflush(stdout);
 	while(1)
 	{
@@ -43,6 +44,12 @@ char * GetInputString()
 		ev = &e.xkey;
 		keysym = XkbKeycodeToKeysym(display, ev->keycode, 0, ev->state & ShiftMask ? 1 : 0);
 		if(keysym == XK_Return) break;
+		if(keysym == XK_Escape)
+		{
+			buff[0] = '\0';
+			break;
+		}
+		if(keysym == NoSymbol) continue;
 		c = XKeysymToString(keysym);
 		printf("%s", c);
 		fflush(stdout);
