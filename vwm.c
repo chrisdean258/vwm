@@ -1,7 +1,11 @@
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <time.h>
+#include <sys/wait.h>
 
 #include "macros.h"
 #include "xeventhandler.h"
@@ -29,36 +33,45 @@ static xeventhandler handler[] = {
 
 char * GetInputString()
 {
-	XEvent e;
-	XKeyEvent * ev;
-	static char buff[1024];
-	KeySym keysym;
-	buff[0] = '\0';
-	char * c;
+	char * cmd[] = { "dmenu", "-b", "-p", ":", "-nb", "#000", "-nf", "#FFF", "-sf", "#FFF", "-sb", "#000", NULL };
+	static char output[1024];
+	int fds[2];
+	int dummy;
+	int len;
 
-	printf(":");
-	fflush(stdout);
-	while(1)
+	if(pipe(fds) == -1) ELOG("pipe");
+
+	XUngrabKeyboard(display, CurrentTime);
+	XFlush(display);
+
+	if(fork() == 0)
 	{
-		if(!XCheckTypedEvent(display, KeyPress, &e)) continue;
-		ev = &e.xkey;
-		keysym = XkbKeycodeToKeysym(display, ev->keycode, 0, ev->state & ShiftMask ? 1 : 0);
-		if(keysym == XK_Return) break;
-		if(keysym == XK_Escape)
+		if(dup2(fds[1], 1) == -1)
 		{
-			buff[0] = '\0';
-			break;
+			ELOG("dup2");
+			exit(1);
 		}
-		if(keysym == NoSymbol) continue;
-		c = XKeysymToString(keysym);
-		printf("%s", c);
-		fflush(stdout);
-		strcat(buff, c);
+		close(0);
+		close(fds[0]);
+		close(fds[1]);
+
+		execvp(cmd[0], cmd);
+		perror(cmd[0]);
+		exit(1);
 	}
-	printf("\n");
-	fflush(stdout);
-	return buff;
+
+	close(fds[1]);
+	wait(&dummy);
+
+	len = read(fds[0], output, 1023);
+	close(fds[0]);
+	output[len-1] = '\0';
+	LOG(output);
+	if (XGrabKeyboard(display, root, True, GrabModeAsync, GrabModeAsync, CurrentTime) != GrabSuccess)
+		running = 0;
+	return output;
 }
+
 
 void NormalMode()
 {

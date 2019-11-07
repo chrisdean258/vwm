@@ -24,8 +24,9 @@ void keypress(XEvent * e)
 	LOG(c);
 
 	if(keysym == XK_Escape) NormalMode();
-	if(keysym == XK_i) InsertMode();
 	if(keysym == XK_colon) CommandMode();
+	if(keysym == XK_q) running = 0;
+	if(keysym == XK_i) InsertMode();
 }
 
 void mappingnotify   (XEvent * e){HERE();}
