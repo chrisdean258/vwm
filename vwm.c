@@ -29,18 +29,28 @@ static xeventhandler handler[] = {
 
 char * GetInputString()
 {
-	XEvent ev;
+	XEvent e;
+	XKeyEvent * ev;
 	static char buff[1024];
 	KeySym keysym;
 	buff[0] = '\0';
 	char * c;
 
-	while(XCheckTypedEvent(display, MotionNotify, &ev))
+	fflush(stdout);
+	while(1)
 	{
+		if(!XCheckTypedEvent(display, KeyPress, &e)) continue;
+		ev = &e.xkey;
 		keysym = XkbKeycodeToKeysym(display, ev->keycode, 0, ev->state & ShiftMask ? 1 : 0);
+		if(keysym == XK_Return) break;
 		c = XKeysymToString(keysym);
+		printf("%s", c);
+		fflush(stdout);
 		strcat(buff, c);
 	}
+	printf("\n");
+	fflush(stdout);
+	return buff;
 }
 
 void NormalMode()
@@ -64,15 +74,16 @@ void InsertMode()
 
 void CommandMode()
 {
-	FILE * proc;
-	char buff[1024];
+	char * c;
 
 	if(mode == Command) return;
 
 	mode = Command;
-
-
 	LOG("Command Mode Active");
+	c = GetInputString();
+	LOGF("Command Mode Command: %s", c);
+
+	if(strcmp(c, "q") == 0) running = 0;
 
 	NormalMode();
 }
@@ -83,8 +94,6 @@ int main()
 
 	if(!(display = XOpenDisplay(NULL))) return 1;
 	root = DefaultRootWindow(display);
-
-	CommandMode();
 
 	XGrabKeyboard(display, root, True, GrabModeAsync, GrabModeAsync, CurrentTime);
 
