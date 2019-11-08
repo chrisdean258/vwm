@@ -9,4 +9,5 @@
 #define LOGF(...) (_INTERNAL_LOG(), fprintf(stderr, __VA_ARGS__), fprintf(stderr, "\n"))
 #define LOG(str) (LOGF("%s", (str)))
 #define HERE() (LOG("Point Reached"))
+#define DIE(str) (LOG(str), exit(1))
 

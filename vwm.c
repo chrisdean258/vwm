@@ -31,44 +31,47 @@ static xeventhandler handler[] = {
 	[UnmapNotify] = unmapnotify
 };
 
-char * GetInputString()
+void grabkeyboard()
 {
-	char * cmd[] = { "dmenu", "-b", "-p", ":", "-nb", "#000", "-nf", "#FFF", "-sf", "#FFF", "-sb", "#000", NULL };
-	static char output[1024];
-	int fds[2];
-	int dummy;
-	int len;
+	struct timespec ts = { .tv_sec = 0, .tv_nsec = 1000000 };
+	int i;
 
-	if(pipe(fds) == -1) ELOG("pipe");
+	for(i = 0; i < 1000; i++)
+	{
+		if(XGrabKeyboard(display, root, True, GrabModeAsync,
+				GrabModeAsync, CurrentTime) == GrabSuccess)
+			return;
+		nanosleep(&ts, NULL);
+	}
+	DIE("cannot grab keyboard");
+}
 
+void ungrabkeyboard()
+{
 	XUngrabKeyboard(display, CurrentTime);
 	XFlush(display);
+}
 
-	if(fork() == 0)
-	{
-		if(dup2(fds[1], 1) == -1)
-		{
-			ELOG("dup2");
-			exit(1);
-		}
-		close(0);
-		close(fds[0]);
-		close(fds[1]);
+void grabkey(KeySym keysym)
+{
+	XGrabKey(display, XKeysymToKeycode(display, keysym), 0, root, True,
+		GrabModeAsync, GrabModeAsync);
+}
 
-		execvp(cmd[0], cmd);
-		perror(cmd[0]);
-		exit(1);
-	}
 
-	close(fds[1]);
-	wait(&dummy);
+char * GetInputString()
+{
+	char * cmd = "echo -n | dmenu -b -p : -nb '#000' -nf '#FFF' -sf '#FFF' -sb '#000'";
+	static char output[1024];
+	FILE * proc;
 
-	len = read(fds[0], output, 1023);
-	close(fds[0]);
-	output[len-1] = '\0';
-	LOG(output);
-	if (XGrabKeyboard(display, root, True, GrabModeAsync, GrabModeAsync, CurrentTime) != GrabSuccess)
-		running = 0;
+	ungrabkeyboard();
+	proc = popen(cmd, "r");
+	fgets(output, 1024, proc);
+	output[MAX(strlen(output) - 1, 0)] = '\0';
+	pclose(proc);
+	grabkeyboard();
+
 	return output;
 }
 
@@ -79,7 +82,7 @@ void NormalMode()
 
 	mode = Normal;
 	LOG("Normal Mode Active");
-	XGrabKeyboard(display, root, True, GrabModeAsync, GrabModeAsync, CurrentTime);
+	grabkeyboard();
 }
 
 void InsertMode()
@@ -88,8 +91,8 @@ void InsertMode()
 
 	mode = Insert;
 	LOG("Insert Mode Active");
-	XUngrabKeyboard(display, CurrentTime);
-	XGrabKey(display, XKeysymToKeycode(display, XK_Escape), 0, root, True, GrabModeAsync, GrabModeAsync);
+	ungrabkeyboard();
+	grabkey(XK_Escape);
 }
 
 void CommandMode()
@@ -97,14 +100,11 @@ void CommandMode()
 	char * c;
 
 	if(mode == Command) return;
-
 	mode = Command;
 	LOG("Command Mode Active");
 	c = GetInputString();
 	LOGF("Command Mode Command: %s", c);
-
 	if(strcmp(c, "q") == 0) running = 0;
-
 	NormalMode();
 }
 
@@ -123,9 +123,5 @@ int main()
 		if(handler[ev.type]) handler[ev.type](&ev);
 	}
 
-
-
 	return 0;
 }
-
-
